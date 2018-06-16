@@ -3,12 +3,13 @@
  *          heavily relying on the code of 
  *          Mathieu Blondel <mathieu@mblondel.org>
  *       
- *          https://github.com/mblondel/svmlight-loader/blob/master/_svmlight_loader.cpp
+ *          https://github.com/mblondel/svmlight-loader
  *
  * License: Simple BSD
  */
 
 #include <Python.h>
+#include <numpy/arrayobject.h>
 
 #include <fstream>
 #include <sstream>
@@ -17,12 +18,13 @@
 #include <vector>
 
 extern "C" {
-  static PyObject *sparse_matr_to_text(PyObject *self, PyObject *args)
-  {
+  static PyObject *_sparse_matr_to_text(PyObject *self, PyObject *args) {
     try {
       // Read function arguments.
       char const *file_path;
-      PyArrayObject *indices_array, *indptr_array, *data_array, *label_array;
+      PyArrayObject *indices_array = nullptr, 
+                    *indptr_array = nullptr, 
+                    *data_array = nullptr; 
 
       if (!PyArg_ParseTuple(args,
                             "sO!O!O!",
@@ -36,14 +38,12 @@ extern "C" {
       double *data = (double*) data_array->data;
       int *indices = (int*) indices_array->data;
       int *indptr = (int*) indptr_array->data;
-      double *y = (double*) label_array->data;
 
       std::ofstream fout;
       fout.open(file_path, std::ofstream::out);
 
       int idx;
       for (int i=0; i < n_samples; i++) {
-        fout << y[i] << " ";
         for (int jj=indptr[i]; jj < indptr[i+1]; jj++) {
           idx = indices[jj];
           fout << idx << ":" << data[jj] << " ";
@@ -69,15 +69,25 @@ extern "C" {
  * Python module setup.
  */
 
-static PyMethodDef sparse_methods[] = {
-  {"sparse_matr_to_text", sparse_matr_to_text, METH_VARARGS, NULL},
+static PyMethodDef module_methods[] = {
+  {"_sparse_matr_to_text", _sparse_matr_to_text, METH_VARARGS, nullptr},
 
-  {NULL, NULL, 0, NULL}
+  {nullptr, nullptr, 0, nullptr}
+};
+
+static struct PyModuleDef sparse_text_util = {
+    PyModuleDef_HEAD_INIT,
+    "_sparse_text_util", /* name of module */
+    "",          /* module documentation, may be NULL */
+    -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    module_methods,
+    nullptr
 };
 
 extern "C" {
-PyMODINIT_FUNC init_sparse_py(void)
-{
-  Py_InitModule3("sparse_py", sparse_methods, NULL);
-       
+ PyMODINIT_FUNC PyInit__sparse_text_util(void) {
+    _import_array();
+
+    return PyModule_Create(&sparse_text_util);
+  }
 }
