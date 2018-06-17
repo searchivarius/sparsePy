@@ -3,7 +3,7 @@ import numpy as np
 
 ext = Extension('_sparse_text_util',
                 include_dirs = [np.get_include(), '.'],
-                extra_compile_args=['-O3'],
+                extra_compile_args=['-std=c++11', '-O3'],
                 sources = ['sparse_text_util.cc'])
 
 setup (name = 'sparse_text_util',
