@@ -25,13 +25,15 @@ extern "C" {
       PyArrayObject *indices_array = nullptr, 
                     *indptr_array = nullptr, 
                     *data_array = nullptr; 
+      int append_flag;
 
       if (!PyArg_ParseTuple(args,
-                            "sO!O!O!",
+                            "sO!O!O!p",
                             &file_path,
                             &PyArray_Type, &data_array,
                             &PyArray_Type, &indices_array,
-                            &PyArray_Type, &indptr_array))
+                            &PyArray_Type, &indptr_array,
+                            &append_flag))
         return 0;
 
       int n_samples = indptr_array->dimensions[0] - 1;
@@ -40,7 +42,7 @@ extern "C" {
       int *indptr = (int*) indptr_array->data;
 
       std::ofstream fout;
-      fout.open(file_path, std::ofstream::out);
+      fout.open(file_path, std::ofstream::out | (append_flag !=0 ? std::ofstream::app : 0));
 
       int idx;
       for (int i=0; i < n_samples; i++) {
