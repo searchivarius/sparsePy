@@ -42,7 +42,10 @@ extern "C" {
       int *indptr = (int*) indptr_array->data;
 
       std::ofstream fout;
-      fout.open(file_path, std::ofstream::out | (append_flag !=0 ? std::ofstream::app : 0));
+      if (append_flag)
+      	fout.open(file_path, std::ofstream::out | std::ofstream::app);
+      else
+      	fout.open(file_path, std::ofstream::out);
 
       int idx;
       for (int i=0; i < n_samples; i++) {
